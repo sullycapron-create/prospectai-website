@@ -1,0 +1,13 @@
+[
+  {
+    "id": "1761200290741",
+    "firstName": "Jean",
+    "lastName": "Dupont",
+    "email": "jean.dupont@example.com",
+    "company": "Acme Corporation",
+    "phone": "+33 6 12 34 56 78",
+    "plan": "Professional",
+    "createdAt": "2025-10-23T06:18:10.741Z",
+    "status": "pending"
+  }
+]
