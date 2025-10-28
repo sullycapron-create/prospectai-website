@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: prospectai-website
+    env: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: ADMIN_EMAIL
+        value: sully.capron@synolia.com
+      - key: PORT
+        value: 3000
+    staticPublicPath: dist
+    routes:
+      - path: /api/*
+        destination: /server.js
+      - path: /*
+        destination: /index.html
+
