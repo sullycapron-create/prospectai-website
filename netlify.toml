@@ -7,10 +7,28 @@
   command = "npm run dev"
   port = 3000
 
-# Redirect API calls to the serverless function
+# Redirect API calls to the serverless functions
 [[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/server:splat"
+  from = "/api/signup"
+  to = "/.netlify/functions/signup"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/signups"
+  to = "/.netlify/functions/signups"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/stats"
+  to = "/.netlify/functions/stats"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/health"
+  to = "/.netlify/functions/health"
   status = 200
   force = true
 
@@ -28,6 +46,9 @@
     X-Content-Type-Options = "nosniff"
     X-XSS-Protection = "1; mode=block"
     Referrer-Policy = "strict-origin-when-cross-origin"
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS"
+    Access-Control-Allow-Headers = "Content-Type"
 
 # Cache headers
 [[headers]]
@@ -39,3 +60,4 @@
   for = "/*.html"
   [headers.values]
     Cache-Control = "public, max-age=3600, s-maxage=3600"
+
