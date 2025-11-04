@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
 import { X, Mail, User, Building2, CheckCircle, AlertCircle } from 'lucide-react'
-import axios from 'axios'
 
 export default function SignupModal({ onClose }) {
   const [formData, setFormData] = useState({
@@ -54,21 +53,36 @@ export default function SignupModal({ onClose }) {
 
     setLoading(true)
     try {
-      // Send signup data to backend
-      const response = await axios.post('/api/signup', formData)
+      // Send to Formspree
+      const response = await fetch('https://formspree.io/f/xyzgzqzq', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          _subject: `Nouvelle inscription ProspectAI - ${formData.firstName} ${formData.lastName}`,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          company: formData.company,
+          phone: formData.phone,
+          plan: formData.plan,
+          _replyto: formData.email,
+        }),
+      })
 
-      if (response.status === 201) {
+      if (response.ok) {
         setSubmitted(true)
         // Auto close after 3 seconds
         setTimeout(() => {
           onClose()
         }, 3000)
+      } else {
+        setError('Une erreur est survenue. Veuillez réessayer.')
       }
     } catch (err) {
-      setError(
-        err.response?.data?.message ||
-        'Une erreur est survenue. Veuillez réessayer.'
-      )
+      console.error('Error:', err)
+      setError('Une erreur est survenue. Veuillez réessayer.')
     } finally {
       setLoading(false)
     }
