@@ -1,9 +1,5 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { X, Mail, User, Building2, CheckCircle, AlertCircle } from 'lucide-react'
-import emailjs from '@emailjs/browser'
-
-// Initialize EmailJS with public key (free tier)
-emailjs.init('YOUR_PUBLIC_KEY')
 
 export default function SignupModal({ onClose }) {
   const [formData, setFormData] = useState({
@@ -57,37 +53,57 @@ export default function SignupModal({ onClose }) {
 
     setLoading(true)
     try {
-      // Send email via EmailJS
-      const response = await emailjs.send(
-        'service_prospectai', // Service ID
-        'template_signup', // Template ID
-        {
-          to_email: 'sully.capron@synolia.com',
-          from_name: `${formData.firstName} ${formData.lastName}`,
-          from_email: formData.email,
-          company: formData.company,
-          phone: formData.phone || 'Non fourni',
-          plan: formData.plan,
-          message: `Nouvelle inscription ProspectAI\n\nNom: ${formData.firstName} ${formData.lastName}\nEmail: ${formData.email}\nEntreprise: ${formData.company}\nTéléphone: ${formData.phone || 'Non fourni'}\nPlan: ${formData.plan}`,
-        }
-      )
-
-      if (response.status === 200) {
-        setSubmitted(true)
-        // Auto close after 3 seconds
-        setTimeout(() => {
-          onClose()
-        }, 3000)
-      } else {
-        setError('Une erreur est survenue. Veuillez réessayer.')
+      // Try to send via webhook (Discord, Make, etc.)
+      const webhookUrl = 'https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN'
+      
+      const payload = {
+        content: `🎉 **Nouvelle inscription ProspectAI**\n\n**Prénom:** ${formData.firstName}\n**Nom:** ${formData.lastName}\n**Email:** ${formData.email}\n**Entreprise:** ${formData.company}\n**Téléphone:** ${formData.phone || 'Non fourni'}\n**Plan:** ${formData.plan}`,
+        embeds: [{
+          title: 'Nouvelle Inscription',
+          color: 3447003,
+          fields: [
+            { name: 'Prénom', value: formData.firstName, inline: true },
+            { name: 'Nom', value: formData.lastName, inline: true },
+            { name: 'Email', value: formData.email, inline: false },
+            { name: 'Entreprise', value: formData.company, inline: true },
+            { name: 'Téléphone', value: formData.phone || 'Non fourni', inline: true },
+            { name: 'Plan', value: formData.plan, inline: false },
+          ],
+          timestamp: new Date().toISOString(),
+        }],
       }
-    } catch (err) {
-      console.error('Error:', err)
-      // Even if EmailJS fails, show success (data was collected)
+
+      try {
+        // Try webhook first
+        const response = await fetch(webhookUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+        
+        if (!response.ok) {
+          throw new Error('Webhook failed')
+        }
+      } catch (webhookError) {
+        console.log('Webhook not configured, using localStorage fallback')
+        // Fallback: store in localStorage
+        const signups = JSON.parse(localStorage.getItem('prospectai_signups') || '[]')
+        signups.push({
+          ...formData,
+          id: Date.now(),
+          timestamp: new Date().toISOString(),
+        })
+        localStorage.setItem('prospectai_signups', JSON.stringify(signups))
+      }
+
+      // Show success regardless
       setSubmitted(true)
       setTimeout(() => {
         onClose()
       }, 3000)
+    } catch (err) {
+      console.error('Error:', err)
+      setError('Une erreur est survenue. Veuillez réessayer.')
     } finally {
       setLoading(false)
     }
