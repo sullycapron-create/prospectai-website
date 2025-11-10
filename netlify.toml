@@ -1,48 +1,18 @@
 [build]
   command = "npm run build"
-  functions = "netlify/functions"
   publish = "dist"
-  environment = { NODE_VERSION = "22" }
-
-[build.environment]
-  NODE_VERSION = "22"
 
 [dev]
   command = "npm run dev"
   port = 3000
 
-# Redirect API calls to the serverless functions
-[[redirects]]
-  from = "/api/signup"
-  to = "/.netlify/functions/signup"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/api/signups"
-  to = "/.netlify/functions/signups"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/api/stats"
-  to = "/.netlify/functions/stats"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/api/health"
-  to = "/.netlify/functions/health"
-  status = 200
-  force = true
-
-# Redirect all other routes to index.html for React Router
+# Redirect all routes to index.html for React Router
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
 
-# Headers
+# Security headers
 [[headers]]
   for = "/*"
   [headers.values]
@@ -51,17 +21,16 @@
     X-XSS-Protection = "1; mode=block"
     Referrer-Policy = "strict-origin-when-cross-origin"
     Access-Control-Allow-Origin = "*"
-    Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS"
-    Access-Control-Allow-Headers = "Content-Type"
 
-# Cache headers
+# Cache headers for assets
 [[headers]]
   for = "/assets/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
+# Cache headers for HTML
 [[headers]]
   for = "/*.html"
   [headers.values]
-    Cache-Control = "public, max-age=3600, s-maxage=3600"
+    Cache-Control = "public, max-age=3600"
 
