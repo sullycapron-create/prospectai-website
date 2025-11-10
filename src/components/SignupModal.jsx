@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { X, Mail, User, Building2, CheckCircle, AlertCircle } from 'lucide-react'
+import { X, CheckCircle, AlertCircle } from 'lucide-react'
 
 export default function SignupModal({ onClose }) {
   const [formData, setFormData] = useState({
@@ -21,7 +21,7 @@ export default function SignupModal({ onClose }) {
       ...prev,
       [name]: value,
     }))
-    setError('')
+    if (error) setError('')
   }
 
   const validateForm = () => {
@@ -33,7 +33,8 @@ export default function SignupModal({ onClose }) {
       setError('Le nom est requis')
       return false
     }
-    if (!formData.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!formData.email.trim() || !emailRegex.test(formData.email)) {
       setError('Un email valide est requis')
       return false
     }
@@ -52,52 +53,21 @@ export default function SignupModal({ onClose }) {
     }
 
     setLoading(true)
+
     try {
-      // Try to send via webhook (Discord, Make, etc.)
-      const webhookUrl = 'https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN'
-      
-      const payload = {
-        content: `🎉 **Nouvelle inscription ProspectAI**\n\n**Prénom:** ${formData.firstName}\n**Nom:** ${formData.lastName}\n**Email:** ${formData.email}\n**Entreprise:** ${formData.company}\n**Téléphone:** ${formData.phone || 'Non fourni'}\n**Plan:** ${formData.plan}`,
-        embeds: [{
-          title: 'Nouvelle Inscription',
-          color: 3447003,
-          fields: [
-            { name: 'Prénom', value: formData.firstName, inline: true },
-            { name: 'Nom', value: formData.lastName, inline: true },
-            { name: 'Email', value: formData.email, inline: false },
-            { name: 'Entreprise', value: formData.company, inline: true },
-            { name: 'Téléphone', value: formData.phone || 'Non fourni', inline: true },
-            { name: 'Plan', value: formData.plan, inline: false },
-          ],
-          timestamp: new Date().toISOString(),
-        }],
-      }
+      // Save to localStorage
+      const signups = JSON.parse(localStorage.getItem('prospectai_signups') || '[]')
+      signups.push({
+        ...formData,
+        id: Date.now(),
+        timestamp: new Date().toISOString(),
+      })
+      localStorage.setItem('prospectai_signups', JSON.stringify(signups))
 
-      try {
-        // Try webhook first
-        const response = await fetch(webhookUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        })
-        
-        if (!response.ok) {
-          throw new Error('Webhook failed')
-        }
-      } catch (webhookError) {
-        console.log('Webhook not configured, using localStorage fallback')
-        // Fallback: store in localStorage
-        const signups = JSON.parse(localStorage.getItem('prospectai_signups') || '[]')
-        signups.push({
-          ...formData,
-          id: Date.now(),
-          timestamp: new Date().toISOString(),
-        })
-        localStorage.setItem('prospectai_signups', JSON.stringify(signups))
-      }
-
-      // Show success regardless
+      // Show success
       setSubmitted(true)
+      
+      // Auto close after 3 seconds
       setTimeout(() => {
         onClose()
       }, 3000)
@@ -112,7 +82,7 @@ export default function SignupModal({ onClose }) {
   if (submitted) {
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-2xl p-12 max-w-md w-full text-center animate-slide-up">
+        <div className="bg-white rounded-2xl p-12 max-w-md w-full text-center">
           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <CheckCircle className="w-8 h-8 text-green-600" />
           </div>
@@ -130,7 +100,7 @@ export default function SignupModal({ onClose }) {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full animate-slide-up">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full">
         {/* Header */}
         <div className="relative bg-gradient-to-r from-blue-600 to-blue-700 rounded-t-2xl p-8 text-white">
           <button
@@ -187,17 +157,14 @@ export default function SignupModal({ onClose }) {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Email
             </label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="jean@example.com"
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-              />
-            </div>
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="jean@example.com"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+            />
           </div>
 
           {/* Company */}
@@ -205,17 +172,14 @@ export default function SignupModal({ onClose }) {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Entreprise
             </label>
-            <div className="relative">
-              <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="text"
-                name="company"
-                value={formData.company}
-                onChange={handleChange}
-                placeholder="Acme Corp"
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-              />
-            </div>
+            <input
+              type="text"
+              name="company"
+              value={formData.company}
+              onChange={handleChange}
+              placeholder="Acme Corp"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+            />
           </div>
 
           {/* Phone */}
@@ -267,7 +231,7 @@ export default function SignupModal({ onClose }) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full btn-primary py-3 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white py-3 font-semibold rounded-lg transition-colors disabled:cursor-not-allowed"
           >
             {loading ? 'Inscription en cours...' : 'S\'inscrire gratuitement'}
           </button>
