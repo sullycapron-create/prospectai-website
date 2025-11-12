@@ -64,6 +64,53 @@ export default function SignupModal({ onClose }) {
       })
       localStorage.setItem('prospectai_signups', JSON.stringify(signups))
 
+      // Send email via Resend API
+      const resendApiKey = 're_XkHF8aSw_PXHmbS3JeyAsVqgdzRRXS3jJ'
+      
+      const emailData = {
+        from: 'noreply@prospectai.com',
+        to: 'sully.capron@synolia.com',
+        subject: `Nouvelle inscription ProspectAI - ${formData.firstName} ${formData.lastName}`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #0066cc;">🎉 Nouvelle Inscription ProspectAI</h2>
+            
+            <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <p><strong>Prénom:</strong> ${formData.firstName}</p>
+              <p><strong>Nom:</strong> ${formData.lastName}</p>
+              <p><strong>Email:</strong> ${formData.email}</p>
+              <p><strong>Entreprise:</strong> ${formData.company}</p>
+              <p><strong>Téléphone:</strong> ${formData.phone || 'Non fourni'}</p>
+              <p><strong>Plan:</strong> ${formData.plan}</p>
+              <p><strong>Date:</strong> ${new Date().toLocaleString('fr-FR')}</p>
+            </div>
+            
+            <p style="color: #666; font-size: 12px;">
+              Cet email a été envoyé automatiquement par ProspectAI.
+            </p>
+          </div>
+        `,
+      }
+
+      try {
+        const response = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${resendApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(emailData),
+        })
+
+        if (!response.ok) {
+          console.error('Resend API error:', await response.text())
+          // Continue anyway - data is saved
+        }
+      } catch (emailError) {
+        console.error('Email sending error:', emailError)
+        // Continue anyway - data is saved locally
+      }
+
       // Show success
       setSubmitted(true)
       
