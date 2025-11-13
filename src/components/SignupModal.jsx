@@ -64,50 +64,74 @@ export default function SignupModal({ onClose }) {
       })
       localStorage.setItem('prospectai_signups', JSON.stringify(signups))
 
-      // Send email via Resend API
-      const resendApiKey = 're_XkHF8aSw_PXHmbS3JeyAsVqgdzRRXS3jJ'
+      // Send to Discord webhook
+      const discordWebhookUrl = 'https://discord.com/api/webhooks/1438428003569893379/cATC7T5hzXdVDQiD9oGS7Cnd6jeEhx_5xwOdl6cPIvInnkVgZZ392s7mWPM4I3QMfQOT'
       
-      const emailData = {
-        from: 'noreply@prospectai.com',
-        to: 'sully.capron@synolia.com',
-        subject: `Nouvelle inscription ProspectAI - ${formData.firstName} ${formData.lastName}`,
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #0066cc;">🎉 Nouvelle Inscription ProspectAI</h2>
-            
-            <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <p><strong>Prénom:</strong> ${formData.firstName}</p>
-              <p><strong>Nom:</strong> ${formData.lastName}</p>
-              <p><strong>Email:</strong> ${formData.email}</p>
-              <p><strong>Entreprise:</strong> ${formData.company}</p>
-              <p><strong>Téléphone:</strong> ${formData.phone || 'Non fourni'}</p>
-              <p><strong>Plan:</strong> ${formData.plan}</p>
-              <p><strong>Date:</strong> ${new Date().toLocaleString('fr-FR')}</p>
-            </div>
-            
-            <p style="color: #666; font-size: 12px;">
-              Cet email a été envoyé automatiquement par ProspectAI.
-            </p>
-          </div>
-        `,
+      const discordMessage = {
+        content: '🎉 **Nouvelle inscription ProspectAI !**',
+        embeds: [
+          {
+            color: 0x0066cc,
+            fields: [
+              {
+                name: '👤 Prénom',
+                value: formData.firstName,
+                inline: true,
+              },
+              {
+                name: '👤 Nom',
+                value: formData.lastName,
+                inline: true,
+              },
+              {
+                name: '📧 Email',
+                value: formData.email,
+                inline: false,
+              },
+              {
+                name: '🏢 Entreprise',
+                value: formData.company,
+                inline: true,
+              },
+              {
+                name: '📱 Téléphone',
+                value: formData.phone || 'Non fourni',
+                inline: true,
+              },
+              {
+                name: '💳 Plan',
+                value: formData.plan,
+                inline: true,
+              },
+              {
+                name: '📅 Date',
+                value: new Date().toLocaleString('fr-FR'),
+                inline: false,
+              },
+            ],
+            footer: {
+              text: 'ProspectAI - Notifications d\'inscription',
+            },
+            timestamp: new Date().toISOString(),
+          },
+        ],
       }
 
       try {
-        const response = await fetch('https://api.resend.com/emails', {
+        const response = await fetch(discordWebhookUrl, {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${resendApiKey}`,
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(emailData),
+          body: JSON.stringify(discordMessage),
         })
 
         if (!response.ok) {
-          console.error('Resend API error:', await response.text())
+          console.error('Discord webhook error:', response.status)
           // Continue anyway - data is saved
         }
-      } catch (emailError) {
-        console.error('Email sending error:', emailError)
+      } catch (webhookError) {
+        console.error('Webhook error:', webhookError)
         // Continue anyway - data is saved locally
       }
 
